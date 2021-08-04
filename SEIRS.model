@@ -1,0 +1,11 @@
+States:S;E;I;R;V
+Parameters:b;a;g;w1;w2
+
+T1:S->E;I;b
+T2:E->I;;a
+T3:I->R;;g
+T4:R->S;;w1
+T5:V->S;;w2
+
+X1:S->I;seed.txt
+X2:S->V;vax.txt
