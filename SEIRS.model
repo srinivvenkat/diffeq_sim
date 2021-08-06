@@ -4,7 +4,7 @@ Parameters:b;a;g;w1;w2;mu
 T1:S->E;I;b
 T2:E->I;;a
 T3:I->R;;g
-#T4:R->S;;w1
+T4:R->S;;w1
 T5:V->S;;w2
 T6:->S;N;mu
 T7:S->;S;mu
