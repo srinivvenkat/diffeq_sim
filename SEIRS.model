@@ -1,11 +1,17 @@
 States:S;E;I;R;V
-Parameters:b;a;g;w1;w2
+Parameters:b;a;g;w1;w2;mu
 
 T1:S->E;I;b
 T2:E->I;;a
 T3:I->R;;g
-T4:R->S;;w1
+#T4:R->S;;w1
 T5:V->S;;w2
+T6:->S;N;mu
+T7:S->;S;mu
+T8:E->;E;mu
+T9:I->;I;mu
+T10:R->;R;mu
+T11:V->;V;mu
 
 X1:S->I;seed.txt
 X2:S->V;vax.txt

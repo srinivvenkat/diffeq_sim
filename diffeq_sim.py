@@ -60,11 +60,21 @@ for e in equations:
     src = eqn.split('->')[0]
     dest = eqn.split('->')[1]
     if cat=='': ## no catalyst  
-        trans_dict[src] += " - param_dict['{}']*{}".format(par,src)
-        trans_dict[dest] += " + param_dict['{}']*{}".format(par,src)
+        if src=='':
+            trans_dict[dest] += " + param_dict['{}']".format(par)
+        elif dest=='':
+            trans_dict[src] += " - param_dict['{}']".format(par)
+        else:
+            trans_dict[src] += " - param_dict['{}']*{}".format(par,src)
+            trans_dict[dest] += " + param_dict['{}']*{}".format(par,src)
     else:
-        trans_dict[src] += " - param_dict['{}']*{}*{}/N".format(par,src,cat)
-        trans_dict[dest] += " + param_dict['{}']*{}*{}/N".format(par,src,cat)        
+        if src=='':
+            trans_dict[dest] += " + param_dict['{}']*{}".format(par,cat)
+        elif dest=='':
+            trans_dict[src] += " - param_dict['{}']*{}".format(par,cat)
+        else:
+            trans_dict[src] += " - param_dict['{}']*{}*{}/N".format(par,src,cat)
+            trans_dict[dest] += " + param_dict['{}']*{}*{}/N".format(par,src,cat)        
 for s in states:
     for x in states:
         trans_dict[s] = trans_dict[s].replace(x,x+'[t]')
