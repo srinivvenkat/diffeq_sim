@@ -11,6 +11,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import argparse as ap
+import re
 
 parser = ap.ArgumentParser(description='Generic difference equation Simulator.')
 parser.add_argument('--model', type=str,
@@ -20,6 +21,11 @@ parser.add_argument('--config', type=str,
 parser.add_argument('--outfile', type=str,help='Output file')
 parser.add_argument('--plotfile',type=str,help='Plot file')
 args = parser.parse_args()
+
+
+def custom_make_translation(text, translation):
+    regex = re.compile('|'.join(map(re.escape, translation)))
+    return regex.sub(lambda match: translation[match.group(0)], text)
 
 # ### Read specifications
 model = pd.read_csv(args.model,sep=':',comment="#",names=['key','value'],skip_blank_lines=True).set_index('key')
@@ -69,8 +75,9 @@ for e in equations:
         for k in param_dict.keys():
             if k in par_term:
                 map_dict[k] = "param_dict['{}']".format(k)
-        map_trans = str.maketrans(map_dict)
-        par_term = par_term.translate(map_trans)
+        # map_trans = str.maketrans(map_dict)
+        # par_term = par_term.translate(map_trans)
+        par_term = custom_make_translation(par_term,map_dict)
         print(par_term)
             
         
