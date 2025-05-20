@@ -75,10 +75,8 @@ for e in equations:
         for k in param_dict.keys():
             if k in par_term:
                 map_dict[k] = "param_dict['{}']".format(k)
-        # map_trans = str.maketrans(map_dict)
-        # par_term = par_term.translate(map_trans)
         par_term = custom_make_translation(par_term,map_dict)
-        print(par_term)
+        #print(par_term)
             
         
     if cat=='': ## no catalyst  
