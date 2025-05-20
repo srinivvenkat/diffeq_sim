@@ -1,0 +1,10 @@
+States:S;E;I;R
+Parameters:b;a;g;w
+
+T1:S->E;I;b
+T2:E->I;;a
+T3:I->R;;g
+T4:R->S;;w
+
+X1:S->I;examples/SEIRS/seed.txt
+

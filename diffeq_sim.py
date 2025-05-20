@@ -4,7 +4,7 @@
 '''
 Code for simulating generic difference equation form.
 Author: Srini Venkatramanan (srini@virginia.edu)
-Last Modified: 30th July 2021
+Last Modified: 20th May 2025
 '''
 
 import pandas as pd
@@ -17,6 +17,8 @@ parser.add_argument('--model', type=str,
                     help='Disease model specification')
 parser.add_argument('--config', type=str,
                     help='Disease parameters')
+parser.add_argument('--outfile', type=str,help='Output file')
+parser.add_argument('--plotfile',type=str,help='Plot file')
 args = parser.parse_args()
 
 # ### Read specifications
@@ -26,7 +28,7 @@ cfg = pd.read_csv(args.config,sep='=',comment="#",names=['key','value'],skip_bla
 # ### Initialize StateArray
 states = model.loc['States']['value'].split(';')
 dim = len(states)
-T = int(cfg.loc['Duration'])
+T = int(cfg.loc['Duration'].values[0])
 X = np.zeros((dim,T))
 state_dict = {}
 c=0
@@ -47,8 +49,6 @@ params = model.loc['Parameters']['value'].split(';')
 param_dict = {}
 for p in params:
     param_dict[p] = float(cfg.loc[p]['value'])
-
-
 # ### Create model equations
 equations = [x for x in model.index.values if x.startswith('T')]
 trans_dict = {}
@@ -59,22 +59,37 @@ for e in equations:
     eqn,cat,par = model.loc[e]['value'].split(';')
     src = eqn.split('->')[0]
     dest = eqn.split('->')[1]
+    
+    par_term = ''
+    if par in param_dict.keys():
+        par_term = "param_dict['{}']".format(par)
+    else:
+        par_term = par
+        map_dict = {}
+        for k in param_dict.keys():
+            if k in par_term:
+                map_dict[k] = "param_dict['{}']".format(k)
+        map_trans = str.maketrans(map_dict)
+        par_term = par_term.translate(map_trans)
+        print(par_term)
+            
+        
     if cat=='': ## no catalyst  
         if src=='':
-            trans_dict[dest] += " + param_dict['{}']".format(par)
+            trans_dict[dest] += " + {}".format(par_term)
         elif dest=='':
-            trans_dict[src] += " - param_dict['{}']".format(par)
+            trans_dict[src] += " - {}".format(par_term)
         else:
-            trans_dict[src] += " - param_dict['{}']*{}".format(par,src)
-            trans_dict[dest] += " + param_dict['{}']*{}".format(par,src)
+            trans_dict[src] += " - {}*{}".format(par_term,src)
+            trans_dict[dest] += " + {}*{}".format(par_term,src)
     else:
         if src=='':
-            trans_dict[dest] += " + param_dict['{}']*{}".format(par,cat)
+            trans_dict[dest] += " + {}*{}".format(par_term,cat)
         elif dest=='':
-            trans_dict[src] += " - param_dict['{}']*{}".format(par,cat)
+            trans_dict[src] += " - {}*{}".format(par_term,cat)
         else:
-            trans_dict[src] += " - param_dict['{}']*{}*{}/N".format(par,src,cat)
-            trans_dict[dest] += " + param_dict['{}']*{}*{}/N".format(par,src,cat)        
+            trans_dict[src] += " - {}*{}*{}/N".format(par_term,src,cat)
+            trans_dict[dest] += " + {}*{}*{}/N".format(par_term,src,cat)        
 for s in states:
     for x in states:
         trans_dict[s] = trans_dict[s].replace(x,x+'[t]')
@@ -103,20 +118,25 @@ for ext in externals:
     src = eqn.split('->')[0]
     dest = eqn.split('->')[1]
     
-    ext_str+= src+'[t] = '+src+"[t] - ext_dict['{}'][t]".format(ext)+'\n'
-    ext_str+= dest+'[t] = '+dest+"[t] + ext_dict['{}'][t]".format(ext)+'\n'
+    ext_str+= src+'[t] = '+src+'[t] - min('+src+"[t],ext_dict['{}'][t])".format(ext)+'\n'
+    ext_str+= dest+'[t] = '+dest+'[t] + min('+src+"[t],ext_dict['{}'][t])".format(ext)+'\n'
 
 print('**** External Updates ****')
 print(ext_str.replace('ext_dict','').replace("['",'').replace("']",''))
 for s in states:
     ext_str = ext_str.replace(s,"state_dict['{}']".format(s))
-    
+
 # ### Simulate the system and save output
-for t in range(T-1):
+for t in range(T-1):    
     exec(ext_str)
     exec(model_str)
 out = pd.DataFrame(X.T,columns=states)
-out.plot()
-plt.savefig('out.png',dpi=100)
-out.to_csv('out.csv')
+    
+if args.outfile:
+    out.to_csv(args.outfile)
+
+if args.plotfile:
+    plt.figure()
+    out.plot()
+    plt.savefig(args.plotfile,dpi=100)
 

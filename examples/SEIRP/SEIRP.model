@@ -1,0 +1,12 @@
+States:S;P;E;I;R
+Parameters:b;a;g;p;w
+
+T1:S->E;I;b
+T2:E->I;;a
+T3:I->R;;g
+T4:R->P;;w
+T5:P->E;I;p*b
+
+X1:S->I;examples/SEIRP/seed.txt
+X2:S->P;examples/SEIRP/vax.txt
+
